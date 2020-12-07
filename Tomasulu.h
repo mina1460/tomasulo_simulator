@@ -11,33 +11,22 @@ class Tomasulu{
         int instructions_count; 
         int misprediction_count; 
         int registers_count;
+        bool done;
 
+        vector <int> res_count;             //reservation stations count
+        vector <int> cyc_count;             //cycles taken to execute instruction
+        vector <int> res_counter;           //currently used reservation stations
 
-        vector <int> res_count;
-        vector <int> cyc_count;
-
-        vector <ReservationStation> load_RS;
-        vector <ReservationStation> store_RS;
-        vector <ReservationStation> beq_RS;
-        vector <ReservationStation> jal_RS;
-        vector <ReservationStation> add_RS;
-        vector <ReservationStation> div_RS;
-
-        int load_res_counter;
-        int store_res_counter; 
-        int beq_res_counter; 
-        int jal_res_counter; 
-        int add_res_counter; 
-        int div_res_counter;
-
+        vector < vector<ReservationStation*>> RS;
 
         int reg_file [REG_FILE_SIZE];           //values of the registers
         int reg_map  [REG_FILE_SIZE];           //mapping of renamed registers
         int reg_free_counter;       
-
-        ifstream inst_mem; 
+        vector <ReservationStation*> reg_functionalUnit_Map;    //register mapping to reservation station
+        ifstream inst_mem;  
 
         vector<Instruction> instructions;
+        int inst_to_issue;                      //current instruction to issue (issue in order)
         
 
     public: 
@@ -45,10 +34,10 @@ class Tomasulu{
         void extract_instructions();
         void rename_instructions();
         void print_instructions ();
-        void check_RaW();
-        void check_WaR();
-        void check_WAW();
-
+        void simulate ();
+        void Issue ();
+        void Execute ();
+        void WriteBack ();
 };
 
 #endif

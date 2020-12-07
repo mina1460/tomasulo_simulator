@@ -2,6 +2,7 @@
 #define INST_H_
 
 #include "includes.h"
+#include "ReservationStation.h"
 
 
 class Instruction{
@@ -13,8 +14,8 @@ class Instruction{
         int imm; 
         int execution_time; 
         string instruction_asm;
-        int int_type;       //add, load, store, div,  branches, jal_Ret; 
-        int reservation_station;
+        int int_type, res_id;       //add, load, store, div,  branches, jal_Ret; 
+        ReservationStation * RS;
     public: 
         Instruction(string assembly);
         void extract_type();
@@ -25,7 +26,33 @@ class Instruction{
         void set_rs1 (int p_rs1);
         int get_rs2 ();
         void set_rs2 (int p_rs2);
-
+        int get_type ();
+        int get_res_id();
+        void set_issue_t (int p_t);
+        void set_RS (ReservationStation * p_RS);
+        ReservationStation * get_RS();
+        ~Instruction();
 };
 
 #endif
+
+/*
+Types:
+    0   Load
+    1   Store
+    2   Branch
+    3   JALR
+    4   RET
+    5   ADD
+    6   NEG
+    7   ADDI
+    8   DIV
+
+RES_id:
+    0   Load
+    1   Store
+    2   Branch
+    3   JALR/RET
+    4   ADD/NEG/ADDI
+    5   DIV
+*/
