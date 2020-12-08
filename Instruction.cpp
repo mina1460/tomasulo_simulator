@@ -3,11 +3,13 @@
 Instruction::Instruction(string assembly)
 {
     instruction_asm = assembly;
+    exec_e = 0;
+    exec_s = 0;
 }
 
 void Instruction::extract_type(){
     stringstream ss(instruction_asm); 
-    string type; 
+    
     ss >> type;
         if (type == "LW")
     {
@@ -171,8 +173,11 @@ int Instruction::get_rs2 (){
 void Instruction::set_rs2 (int p_rs2){
     rs2 = p_rs2;
 }
-int Instruction::get_type (){
+int Instruction::get_int_type (){
     return int_type;
+}
+int Instruction::get_imm (){
+    return imm;
 }
 int Instruction::get_res_id (){
     return res_id;
@@ -180,8 +185,28 @@ int Instruction::get_res_id (){
 void Instruction::set_issue_t (int p_t){
     issue_t = p_t;
 }
+void Instruction::set_exec_s (int p_t){
+    exec_s = p_t;
+}
+void Instruction::set_exec_e (int p_t){
+    exec_e = p_t;
+}
+
+int Instruction::get_issue_t(){
+    return issue_t;
+}
+int Instruction::get_exec_s(){
+    return exec_s;
+}
+int Instruction::get_exec_e(){
+    return exec_e;
+}
+
 void Instruction::set_RS (ReservationStation * p_RS){
     RS = p_RS;
+}
+string Instruction::get_type(){
+return type;
 }
 ReservationStation * Instruction::get_RS(){
     return RS;

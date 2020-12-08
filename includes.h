@@ -10,6 +10,6 @@
 
 using namespace std;
 
-#define REG_FILE_SIZE 8
+#define REG_FILE_SIZE 8 
 
 #endif

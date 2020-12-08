@@ -3,6 +3,7 @@
 
 #include "Instruction.h"
 #include "ReservationStation.h"
+#include "Rstat.h"
 
 class Tomasulu{
     private: 
@@ -12,6 +13,7 @@ class Tomasulu{
         int misprediction_count; 
         int registers_count;
         bool done;
+        bool stall_execute;
 
         vector <int> res_count;             //reservation stations count
         vector <int> cyc_count;             //cycles taken to execute instruction
@@ -24,7 +26,7 @@ class Tomasulu{
         int reg_free_counter;       
         vector <ReservationStation*> reg_functionalUnit_Map;    //register mapping to reservation station
         ifstream inst_mem;  
-
+        vector <Rstat> register_status;
         vector<Instruction> instructions;
         int inst_to_issue;                      //current instruction to issue (issue in order)
         
