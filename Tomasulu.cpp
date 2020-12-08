@@ -8,7 +8,7 @@ Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string 
         cerr << "Failed: Cannot open file " << file_path << "\n";
         exit(1); 
         }
-
+        done = false;
         clock = 0;
         cycles_count = 0; 
         instructions_count = 0; 
@@ -102,7 +102,7 @@ void Tomasulu::rename_instructions(){
         printf("\n");
         for (int i=0; i<instructions.size(); i++){
         instructions[i].extract_type();
-        /* Renaming */
+        /* Renaming 
         cout << instructions[i].get_rd() <<" <-- " << instructions[i].get_rs1() << " op " << instructions[i].get_rs2() <<" \n"; 
         if (instructions[i].get_rd() != 0){
                 
@@ -114,7 +114,7 @@ void Tomasulu::rename_instructions(){
                 reg_free_counter++;
                 
                 cout << instructions[i].get_rd() <<" <-- " << instructions[i].get_rs1() << " op " << instructions[i].get_rs2() <<" \n"; 
-        }
+        }*/
         /************/
         printf("\n");
         }
@@ -129,16 +129,15 @@ void Tomasulu::print_instructions (){
 }
 
 
-void Tomasulu::simulate(){
-       bool done = false;
+void Tomasulu::simulate(){ 
       
-       do {
+       while (!done) {
                 Issue();
                 Execute();
                 WriteBack();
                 clock ++;
-
-       }while(!done);
+                
+        }
 }
 
 void Tomasulu::Issue(){
