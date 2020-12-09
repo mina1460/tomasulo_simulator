@@ -161,20 +161,25 @@ void Tomasulu::simulate(){
 
                 if (clock >= 50) done = true;
 
-                for (int i=0; i<register_status.size(); i++){
-                        if (register_status[i].getBusy()){
-                                done = false;
-                                break;
-                        }
-                        else {
-                                done = true;
+                for (int i=0; i<RS.size(); i++){
+                        for (int j=0; j<RS[i].size(); j++){
+                               if (RS[i][j]->busy){
+                                        done = false;
+                                        goto cont;
+                                }
+                                else {
+                                        done = true;
+                                } 
                         }
                 }
+                cont:
 
                 clock ++;
               
                 int o; 
                 cin >> o;
+                if (o == -1) break;
+                
                 print_stats();
         }
         print_stats();
@@ -205,8 +210,9 @@ void Tomasulu::Issue(){
                         RS[res_id][j]->op = instructions[inst_to_issue].get_type();
                         
 
-                        if (RS[res_id][j]->op == "JAL" || RS[res_id][j]->op == "RET")
+                        if (RS[res_id][j]->op == "JALR" || RS[res_id][j]->op == "RET"){
                                 can_issue = false;
+                        }
 
                         if (branch_met){
                                 RS_flush.push_back(RS[res_id][j]);
@@ -271,7 +277,7 @@ void Tomasulu::Execute(){
                         && instructions[inst_num].get_exec_e() <= (cyc_count[instructions[inst_num].get_int_type()])
                         && (!branch_met || (branch_met && (inst_num <= branch_pc)))
                         ){
-                        //     cout << "\n" << inst_num << ": Qj " << RS[i][j]->Qj << " " << "Qk " << RS[i][j]->Qk << " ";
+                            cout << "\n" << inst_num << ": Qj " << RS[i][j]->Qj << " " << "Qk " << RS[i][j]->Qk << " ";
                         //     cout << "\t end: " << instructions[inst_num].get_exec_e() << "\t start: " << instructions[inst_num].get_exec_s()<< "\n";
                             if (RS[i][j]->Qj == -1 && RS[i][j]->Qk == -1){          //Qj and Qk are empty
                                     
@@ -285,7 +291,6 @@ void Tomasulu::Execute(){
                                     }
                                     
                                     if (instructions[inst_num].get_exec_e()+1 == (cyc_count[instructions[inst_num].get_int_type()])){
-                                        //     cout << "\tREACHED END " << cyc_count[instructions[inst_num].get_int_type()] << "\n";
                                             int s = instructions[inst_num].get_exec_s();
                                             int e = instructions[inst_num].get_exec_e();
                                             instructions[inst_num].set_exec_e(s+e);
@@ -397,6 +402,7 @@ void Tomasulu::WriteBack(){
                                                                 reg_file[k] = RS[i][j]->result;
                                                                 reg_file[0] = 0;
                                                                 register_status[k].setQ(-1,-1);
+                                                                register_status[k].setNOTBusy();
                                                                 
                                                         }
                                                     }

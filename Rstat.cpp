@@ -12,6 +12,9 @@ void Rstat::setQ(int x, int y){
         index = x;
         Q = y;
 }
+void Rstat::setNOTBusy (){
+        busy = false;
+}
 void Rstat::setBusy(bool b){
         busy = b;
 }  

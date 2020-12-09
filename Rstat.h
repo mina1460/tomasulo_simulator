@@ -11,6 +11,7 @@ private:
 public:
     Rstat();
     void setQ(int x, int y);
+    void setNOTBusy ();
     void setBusy(bool b);
     bool getBusy();
     int getIndex();
