@@ -23,7 +23,7 @@ class ReservationStation {
         void resetRS();
 
         string name;
-        int id;
+        int IDj, IDk;
         bool busy;
         string op;
         int Vj, Vk;

@@ -159,11 +159,10 @@ void Tomasulu::simulate(){
                 Execute();
                 WriteBack();
 
-                if (clock >= 50) done = true;
 
                 for (int i=0; i<RS.size(); i++){
                         for (int j=0; j<RS[i].size(); j++){
-                               if (RS[i][j]->busy){
+                               if (RS[i][j]->busy || clock < 100){
                                         done = false;
                                         goto cont;
                                 }
@@ -224,22 +223,25 @@ void Tomasulu::Issue(){
                                 branch_met = true;
                         }
                         
-                        RS[res_id][j]->id = res_id;
                         
                         //Vj and Qj of Reservation Station
                         if (!register_status[instructions[inst_to_issue].get_rs1()].getBusy() || instructions[inst_to_issue].get_rs1() == 0){
                              RS[res_id][j]->Vj = reg_file[instructions[inst_to_issue].get_rs1()];
                              RS[res_id][j]->Qj = -1;
+                             RS[res_id][j]->IDj = -1;
                         } else {
                              RS[res_id][j]->Qj = register_status[instructions[inst_to_issue].get_rs1()].getQ();  
+                             RS[res_id][j]->IDj = register_status[instructions[inst_to_issue].get_rs1()].getIndex();
                         }
                         
                         // Vk and Qk of Reservation Station
                         if (!register_status[instructions[inst_to_issue].get_rs2()].getBusy() || instructions[inst_to_issue].get_rs2() == 0){
                              RS[res_id][j]->Vk = reg_file[instructions[inst_to_issue].get_rs2()];
                              RS[res_id][j]->Qk = -1;
+                             RS[res_id][j]->IDk = -1;
                         } else {
-                             RS[res_id][j]->Qk = register_status[instructions[inst_to_issue].get_rs2()].getQ();  
+                             RS[res_id][j]->Qk = register_status[instructions[inst_to_issue].get_rs2()].getQ(); 
+                             RS[res_id][j]->IDk = register_status[instructions[inst_to_issue].get_rs2()].getIndex();
                         }
 
                         //set imm of Reservation Station
@@ -277,7 +279,7 @@ void Tomasulu::Execute(){
                         && instructions[inst_num].get_exec_e() <= (cyc_count[instructions[inst_num].get_int_type()])
                         && (!branch_met || (branch_met && (inst_num <= branch_pc)))
                         ){
-                            cout << "\n" << inst_num << ": Qj " << RS[i][j]->Qj << " " << "Qk " << RS[i][j]->Qk << " ";
+                        //     cout << "\n" << inst_num << ": Qj " << RS[i][j]->Qj << " " << "Qk " << RS[i][j]->Qk << " ";
                         //     cout << "\t end: " << instructions[inst_num].get_exec_e() << "\t start: " << instructions[inst_num].get_exec_s()<< "\n";
                             if (RS[i][j]->Qj == -1 && RS[i][j]->Qk == -1){          //Qj and Qk are empty
                                     
@@ -369,8 +371,6 @@ void Tomasulu::Execute(){
     }
 }
 
-
-
 void Tomasulu::WriteBack(){
         //write back
         /*
@@ -407,17 +407,18 @@ void Tomasulu::WriteBack(){
                                                         }
                                                     }
 
-                                                    for (int x=0; x<RS.size(); x++)
+                                                    for (int x=0; x<RS.size(); x++){
                                                         for (int y=0; y<RS[x].size(); y++){
-                                                                if (RS[x][y]->id == i && RS[x][y]->Qj == j){
+                                                                if (RS[x][y]->IDj == i && RS[x][y]->Qj == j){
                                                                         RS[x][y]->Vj = RS[i][j]->result;
                                                                         RS[x][y]->Qj = -1;
                                                                 }
-                                                                if (RS[x][y]->id == i && RS[x][y]->Qk == j){
+                                                                if (RS[x][y]->IDk == i && RS[x][y]->Qk == j){
                                                                         RS[x][y]->Vk = RS[i][j]->result;
                                                                         RS[x][y]->Qk = -1;
                                                                 }
                                                         }
+                                                    }
 
                                                     RS[i][j]->resetRS();
                                                     break;
@@ -463,6 +464,11 @@ void Tomasulu::print_stats(){
                         << "\t" << instructions[i].get_exec_s() <<" - " << instructions[i].get_exec_e() 
                         << "\t\t" <<instructions[i].get_write_t() << endl;
         }
+        cout << "\nREG Status\n";
+        for(int j=0; j<REG_FILE_SIZE; j++){
+                cout <<"X" <<j <<": " << register_status[j].getIndex() << " " << register_status[j].getQ() << "\t";
+        }
+
         cout << "\nREG file\n";
         for(int j=0; j<REG_FILE_SIZE; j++){
                 cout <<"X" <<j <<": " <<reg_file[j] << "\t";

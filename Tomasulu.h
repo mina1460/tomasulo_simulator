@@ -26,7 +26,7 @@ class Tomasulu{
         vector <int> cyc_count;             //cycles taken to execute instruction
         vector <int> res_counter;           //currently used reservation stations
 
-        vector < vector<ReservationStation*>> RS;
+        vector < vector<ReservationStation*> > RS;
         vector <ReservationStation*> RS_flush;          //RS to flush (reset) if branch taken
 
         int reg_file [REG_FILE_SIZE];           //values of the registers

@@ -5,6 +5,8 @@ Instruction::Instruction(string assembly)
     instruction_asm = assembly;
     exec_e = 0;
     exec_s = 0;
+    issue_t = 0;
+    write_t = 0;
 }
 
 void Instruction::extract_type(){

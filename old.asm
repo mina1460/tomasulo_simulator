@@ -19,3 +19,13 @@ JALR x4
 ADDI x7, x0, 4
 ADD x0, x0, x4
 ADD x0, x0, x2
+
+ADDI x0, x0, 0
+ADDI x0, x0, 0
+ADDI x2, x0, 100
+LW x4, 10(x2)
+LW x5, 0(x0)
+LW x3, 1(x0)
+LW x7, 99(x0)
+SW x5, 2(x0)
+LW x6, 2(x0)

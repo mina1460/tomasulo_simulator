@@ -5,7 +5,8 @@ ReservationStation::ReservationStation (string p_name){
 }
 ReservationStation::~ReservationStation (){}
 void ReservationStation::resetRS (){
-        id = -1;
+        IDj = -1;
+        IDk = -1;
         busy = false;
         op.clear();
         Vj = 0;
