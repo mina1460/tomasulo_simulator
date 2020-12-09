@@ -29,3 +29,18 @@ LW x3, 1(x0)
 LW x7, 99(x0)
 SW x5, 2(x0)
 LW x6, 2(x0)
+
+ADDI x0, x0, 0
+ADDI x0, x0, 0
+ADDI x2, x0, 100
+LW x4, 10(x2)
+LW x5, 0(x0)
+SW x5, 2(x0)
+LW x3, 1(x0)
+LW x7, 99(x0)
+LW x6, 2(x0)
+
+ADDI x2, x0, 16
+ADDI x1, x0, 2
+DIV x3, x2, x1
+NEG x4, x3

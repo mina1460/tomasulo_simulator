@@ -193,6 +193,7 @@ void Tomasulu::Issue(){
                 if(res_counter[instructions[inst_to_issue].get_res_id()] < res_count[instructions[inst_to_issue].get_int_type()]){
                         
                         instructions[inst_to_issue].set_issue_t(clock);
+                        cout << "\t\t\tINSTRUCTION TO ISSUE => " << inst_to_issue << "\n";
                         
                         int res_id = instructions[inst_to_issue].get_res_id();
                         int size_RS = RS[res_id].size();
@@ -200,6 +201,9 @@ void Tomasulu::Issue(){
                         for (j=0; j<size_RS; j++)
                                 if (!RS[res_id][j]->busy){
                                         instructions[inst_to_issue].set_RS(RS[res_id][j]);
+                                        instructions[inst_to_issue].set_exec_s(0);
+                                        instructions[inst_to_issue].set_exec_e(0);
+                                        instructions[inst_to_issue].setWriteT(0);
                                         RS[res_id][j]->instruction_number = inst_to_issue;
                                         RS[res_id][j]->busy = true;
                                         res_counter[instructions[inst_to_issue].get_res_id()]++;
@@ -292,7 +296,7 @@ void Tomasulu::Execute(){
                                             instructions[inst_num].set_exec_e(++e);
                                     }
                                     
-                                    if (instructions[inst_num].get_exec_e()+1 == (cyc_count[instructions[inst_num].get_int_type()])){
+                                    if (instructions[inst_num].get_exec_e() >= (cyc_count[instructions[inst_num].get_int_type()])-1){
                                             int s = instructions[inst_num].get_exec_s();
                                             int e = instructions[inst_num].get_exec_e();
                                             instructions[inst_num].set_exec_e(s+e);
