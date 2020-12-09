@@ -1,8 +1,22 @@
-// #include "ReservationStation.h"
+#include "ReservationStation.h"
 
-// ReservationStation::ReservationStation (string p_name){
-//         name = p_name;
-// }
+ReservationStation::ReservationStation (string p_name){
+        name = p_name;
+}
+void ReservationStation::resetRS (){
+        id = -1;
+        busy = false;
+        op.clear();
+        Vj = 0;
+        Vk = 0;
+        imm = 0;
+        Qj = -1;
+        Qk = -1;
+        address = 0;
+        instruction_number = - 1; 
+        ready = false; 
+        result = 0;
+}
 // bool ReservationStation::get_busy (){
 //         return busy;
 // }

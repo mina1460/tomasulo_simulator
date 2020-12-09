@@ -1,6 +1,6 @@
 
 #include "Tomasulu.h"
-
+#include <iomanip>
 Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string file_path,  int lcc, int scc, int bcc, int jcc, int acc, int dcc){
         
         inst_mem.open(file_path, ios::in);
@@ -9,12 +9,16 @@ Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string 
                 exit(1); 
         }
         done = false;
+        can_issue = true;
+        branch_met = false;
+        branch_pc = INT_MAX;
         clock = 0;
         cycles_count = 0; 
         instructions_count = 0; 
         misprediction_count = 0; 
         registers_count = 0;
         inst_to_issue = 0;
+        no_of_branches = 0;
         
         for (int i=0; i<6; i++)
                 res_counter.push_back(0);
@@ -87,14 +91,32 @@ Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string 
                 Rstat r;
                 register_status.push_back(r);
         }
-}
 
+        for (int o = 0; o < MEM_SIZE; o++)
+        {
+                DataMem[o] = o;
+        }
+        
+        DataMem [0] = 17;
+        DataMem [110] = 9;
+        DataMem [1] = 25;
+        DataMem [124] = 9;
+        DataMem [300] = 7;
+
+}
+void Tomasulu::addToMem (int val, int address){
+        DataMem [address] = val;
+        return;
+}
 void Tomasulu::extract_instructions(){
         string line; 
         while(getline(inst_mem,line)){
-        Instruction temp_inst(line);
-        instructions.push_back(temp_inst);                
+                cout << "HI";
+                Instruction temp_inst(line);
+                instructions.push_back(temp_inst);   
+                cout << line << "\n";             
         }
+        return ;
 }
 void Tomasulu::rename_instructions(){
         printf("\n");
@@ -114,7 +136,7 @@ void Tomasulu::rename_instructions(){
                 cout << instructions[i].get_rd() <<" <-- " << instructions[i].get_rs1() << " op " << instructions[i].get_rs2() <<" \n"; 
         }*/
         /************/
-        printf("\n");
+        // printf("\n");
         }
 
         
@@ -128,17 +150,30 @@ void Tomasulu::print_instructions (){
 
 
 void Tomasulu::simulate(){ 
-      
+      cout << "hello";
        while (!done) {
-                
-                if(inst_to_issue<instructions.size())
+                cout << clock << " ";
+                if(inst_to_issue<instructions.size() && can_issue)
                         Issue();
                 
                 Execute();
                 WriteBack();
+
+
+                for (int i=0; i<register_status.size(); i++){
+                        if (register_status[i].getBusy()){
+                                done = false;
+                                break;
+                        }
+                        else {
+                                done = true;
+                        }
+                }
+
                 clock ++;
-                
+              
         }
+        print_stats();
 }
 
 void Tomasulu::Issue(){
@@ -164,10 +199,25 @@ void Tomasulu::Issue(){
                                 }
 
                         RS[res_id][j]->op = instructions[inst_to_issue].get_type();
+                        
+
+                        if (RS[res_id][j]->op == "JAL" || RS[res_id][j]->op == "RET")
+                                can_issue = false;
+
+                        if (branch_met){
+                                RS_flush.push_back(RS[res_id][j]);
+                                
+                        }
+                        
+                        if(RS[res_id][j]->op == "BEQ" && !branch_met) {
+                                branch_pc = inst_to_issue;
+                                branch_met = true;
+                        }
+                        
                         RS[res_id][j]->id = res_id;
                         
                         //Vj and Qj of Reservation Station
-                        if (!register_status[instructions[inst_to_issue].get_rs1()].getBusy()){
+                        if (!register_status[instructions[inst_to_issue].get_rs1()].getBusy() || instructions[inst_to_issue].get_rs1() == 0){
                              RS[res_id][j]->Vj = reg_file[instructions[inst_to_issue].get_rs1()];
                              RS[res_id][j]->Qj = -1;
                         } else {
@@ -175,7 +225,7 @@ void Tomasulu::Issue(){
                         }
                         
                         // Vk and Qk of Reservation Station
-                        if (!register_status[instructions[inst_to_issue].get_rs2()].getBusy()){
+                        if (!register_status[instructions[inst_to_issue].get_rs2()].getBusy() || instructions[inst_to_issue].get_rs2() == 0){
                              RS[res_id][j]->Vk = reg_file[instructions[inst_to_issue].get_rs2()];
                              RS[res_id][j]->Qk = -1;
                         } else {
@@ -197,8 +247,11 @@ void Tomasulu::Execute(){
 
     //execution
     /*
-    1- check if instruction Qj and Qk are empty
-    2- check if any precending branch instruction finished execution
+    Loop on every Reservation Station and check:
+        1- If Busy
+        2- If instruction issue time is bigger than clock (so as not to issue and execute at same clock cycle)
+        3- If execution counter less or equal to max cycles for exectuion
+        4- If branch hasnt been met or branch is met and instruction is before branch
     */
     for (int i=0; i<RS.size(); i++){
             for (int j=0; j<RS[i].size(); j++){
@@ -206,6 +259,7 @@ void Tomasulu::Execute(){
                     if (RS[i][j]->busy 
                         && instructions[inst_num].get_issue_t() > clock 
                         && instructions[inst_num].get_exec_e() <= (cyc_count[instructions[inst_num].get_int_type()])
+                        && (!branch_met || (branch_met && (inst_num <= branch_pc)))
                         ){
 
                             if (RS[i][j]->Qj == -1 && RS[i][j]->Qk == -1){          //Qj and Qk are empty
@@ -228,23 +282,40 @@ void Tomasulu::Execute(){
                                             {
                                             case 0:
                                                     /* LW rd, imm(rs1) */
-                                                    
+                                                    RS[i][j]->address = RS[i][j]->Vj + RS[i][j]->imm;
+                                                    RS[i][j]->result = DataMem[RS[i][j]->address % MEM_SIZE];
+                                                    RS[i][j]->ready = true;
                                                     break;
                                             case 1:
                                                     /* SW rs2, imm(rs1) */
-                                                    
+                                                    RS[i][j]->address = RS[i][j]->Vj + RS[i][j]->imm;
+                                                    RS[i][j]->ready = true;
                                                     break;
                                             case 2:
                                                     /* BEQ rs1, rs2, imm */
-                                                    
+                                                    if (RS[i][j]->Vj == RS[i][j]->Vk){
+                                                        inst_to_issue += RS[i][j]->imm;
+                                                        for (int k = 0; k < RS_flush.size(); k++)
+                                                                RS_flush[k]->resetRS();
+                                                        misprediction_count++;
+                                                    }
+                                                    branch_met = false;
+                                                    RS_flush.clear();
+                                                    no_of_branches++;
+                                                    RS[i][j]->ready = true;
                                                     break;
                                             case 3:
                                                     /* JALR rs1 */
-                                                    
+                                                    RS[i][j]->result = inst_to_issue;
+                                                    RS[i][j]->ready = true;
+                                                    inst_to_issue = RS[i][j]->Vj;
+                                                    can_issue = true;
                                                     break;
                                             case 4:
                                                     /* RET */
-
+                                                    inst_to_issue = RS[i][j]->Vj;
+                                                    can_issue = true;
+                                                    RS[i][j]->ready = true;
                                                     break;
                                             case 5:
                                                     /* ADD rd, rs1, rs2  */ 
@@ -268,6 +339,7 @@ void Tomasulu::Execute(){
                                                     break;
                                             default:
                                                     RS[i][j]->ready = false;
+                                                    cout << "DEFAULT EXEC\n";
                                                     break;
                                         }
 
@@ -275,30 +347,107 @@ void Tomasulu::Execute(){
 
                                     
                             } else continue;
-
-                            
-                            
-
-
-
-                    }
+                   }
             }
     }
-    
-            
-
-
-
-
-
 }
 
 
 
 void Tomasulu::WriteBack(){
-//write back
-                /*
-                1- check all reservation stations (Qj and Qk) if listening for result
-                2- write value to register file
-                */
+        //write back
+        /*
+        1- check all reservation stations (Qj and Qk) if listening for result
+        2- write value to register file
+        */
+
+        for (int i=0; i<RS.size(); i++){
+                for (int j=0; j<RS[i].size(); j++){
+                        int inst_num = RS[i][j]->instruction_number;
+                        if (RS[i][j]->busy 
+                            && RS[i][j]->ready
+                            && instructions[inst_num].get_exec_e() < clock
+                        ){
+                        int int_type = instructions[inst_num].get_int_type();
+                        instructions[inst_num].setWriteT(clock);
+                                switch (int_type)
+                                            {
+                                            case 0:     /* LW rd, imm(rs1) */
+                                            case 3:     /* JALR rs1 */
+                                            case 5:     /* ADD rd, rs1, rs2  */ 
+                                            case 6:     /* NEG rd, rs1 */
+                                            case 7:     /* ADDI rd, rs1, imm */
+                                            case 8:     /* DIV rd, rs1, rs2 */
+                                                    
+                                                    for (int k = 0; k<register_status.size(); k++){
+                                                        if (register_status[k].getIndex() == i && register_status[k].getQ() == j){
+                                                                reg_file[k] = RS[i][j]->result;
+                                                                reg_file[0] = 0;
+                                                                register_status[k].setQ(-1,-1);
+                                                                
+                                                        }
+                                                    }
+
+                                                    for (int x=0; x<RS.size(); x++)
+                                                        for (int y=0; y<RS[i].size(); y++){
+                                                                if (RS[x][y]->id == x && RS[x][y]->Qj == y){
+                                                                        RS[x][y]->Vj = RS[i][j]->result;
+                                                                        RS[x][y]->Qj = -1;
+                                                                }
+                                                                if (RS[x][y]->id == x && RS[x][y]->Qk == y){
+                                                                        RS[x][y]->Vk = RS[i][j]->result;
+                                                                        RS[x][y]->Qk = -1;
+                                                                }
+                                                        }
+
+                                                    RS[i][j]->resetRS();
+                                                    break;
+                                            
+                                            case 1:     /* SW rs2, imm(rs1) */
+
+                                                    DataMem[RS[i][j]->address % MEM_SIZE] = RS[i][j]->Vk;
+                                                    RS[i][j]->resetRS();
+                                                    break;
+
+                                            case 2:     /* BEQ rs1, rs2, imm */
+                                                    
+                                                    RS[i][j]->resetRS();
+                                                    break;
+                                            
+                                            case 4:     /* RET */
+                                                    
+                                                    RS[i][j]->resetRS();   
+                                                    break;
+                                            
+                                            default:
+                                                    cout << "DEFAULT WB\n";
+                                                    break;
+                                        }
+
+
+                        }
+                }
+        }
+}
+
+void Tomasulu::print_stats(){
+        // ofstream stats;
+        // stats.open("stats.html", ios::out);
+        cout << setw(40) <<"Instructions" << 
+                setw(8) <<"Issue" <<
+                setw(10) <<"Execute" << 
+                setw(15) <<"Write Back" << endl;
+                int i;
+        for (i = 0; i < instructions.size(); i++)
+        {
+                cout << setw(40) << instructions[i].get_inst() << 
+                setw(8) << instructions[i].get_issue_t()<<
+                setw(10) << instructions[i].get_exec_s() <<" - " <<instructions[i].get_exec_e() << " "  <<
+                setw(15) <<instructions[i].get_write_t() << endl;
+        }
+        
+        cout << "Number of Clock cycles = " << instructions[i-1].get_write_t() << "\n";
+        cout << "Instruction per Cycle (IPC) = " << (float)i / (float)instructions[i-1].get_write_t() << "\n";
+        cout << "Branch Misprediction Percentage = " << ((float)misprediction_count / (float)no_of_branches) * 100 << "\n";
+        
 }

@@ -19,7 +19,8 @@ class ReservationStation {
         // void set_Vk (int p_vk);
         // void set_Qj (int p_qj);
         // void set_Qk (int p_qk);
-        
+        void resetRS();
+
         string name;
         int id;
         bool busy;

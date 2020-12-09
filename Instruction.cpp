@@ -205,8 +205,17 @@ int Instruction::get_exec_e(){
 void Instruction::set_RS (ReservationStation * p_RS){
     RS = p_RS;
 }
+void Instruction::setWriteT(int x){
+    write_t = x;
+}
+int Instruction::get_write_t(){
+    return write_t;
+}
 string Instruction::get_type(){
 return type;
+}
+string Instruction::get_inst(){
+return instruction_asm;
 }
 ReservationStation * Instruction::get_RS(){
     return RS;

@@ -20,6 +20,7 @@ class Instruction{
     public: 
         Instruction(string assembly);
         void extract_type();
+        string get_inst();
         void extract_operands();
         int get_rd ();
         void set_rd (int p_rd);
@@ -37,9 +38,10 @@ class Instruction{
         int get_issue_t();
         int get_exec_s();
         int get_exec_e();
+        int get_write_t ();
         void set_exec_s(int x);
         void set_exec_e(int x);
-        
+        void setWriteT(int x);
         ~Instruction();
 };
 

@@ -4,8 +4,8 @@
 Rstat::Rstat()
 {
     busy = false;
-    Q = 0;
-    index = 0;
+    Q = -1;
+    index = -1;
 }
 void Rstat::setQ(int x, int y){
         busy = true;
