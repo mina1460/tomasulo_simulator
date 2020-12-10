@@ -1,0 +1,26 @@
+- December 6, 9:00PM:
+    - decided on the project design and data flow
+    - designed the classes (Tomasulu, instruction, reservation station)
+
+- December 7, 7:00PM: 
+    - wrote the assembly parser that extracts the operands and fill them in the instruction class 
+    - started writing the issue instruction
+    - thought that we are going to need register renaming and we wrote its function, but it turned out that it is not needed.
+    - we removed it afterwards
+
+- December 8, 10:00PM:
+    - wrote the issue and execute functions 
+    - found out that we need a new class for register status and we wrote it
+
+- December 9, 2:00PM:
+    - wrote the write back function and the driver loop and tested LW, SW, ADDI, ADD, NEG, DIV, JALR
+    - fixed errors in dependencies 
+    - it's now 2:15 AM xD, we will continue tomorrow. 
+
+- December 10, 1:00Pm: 
+    - made sure execution can start in the same cycle as the write back if data was forwarded
+    - fixed a lot of errors 
+    - Wrote the remaining testing programs and validated that everything is working fine
+    - Success! ready to submit (6:45PM)
+
+  

@@ -7,25 +7,6 @@
 /*
 g++ -I . main.cpp Instruction.cpp ReservationStation.cpp Tomasulu.cpp Rstat.cpp -o main.exe
 g++ -g -I . main.cpp Instruction.cpp ReservationStation.cpp Tomasulu.cpp Rstat.cpp -o newmain
-break Tomasulu::extract_instructions()
-After Register Renaming
-    Issue:      If there is a free reservation station
-    Execute:    When both operands are ready (RaW) & branch outcome known
-    Write:      After execution, NO condition       
-http://people.ee.duke.edu/~sorin/ece252/lectures/4.2-tomasulo.pdf
-
-
-To Do:
-    - Does not take 1 clock cycle execution time
-    ✔︎ - JALR does not reissue instructions after jumping backwards
-    ✔︎ - LW rs1 dependancy stalls execution
-    ✔︎ - SW rs2 dependancy stalls execution
-    ✔︎ - Try RET, NEG, DIV   
-    ✔︎ - Add another stopping condition
-    ✔︎ - Try BEQ 
-    ✔︎ - First instruction takes 1 extra cycle in execution
-    ✔︎ - User enters starting program's address 
-
 */
 
 
