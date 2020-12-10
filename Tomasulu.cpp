@@ -1,13 +1,14 @@
 
 #include "Tomasulu.h"
 #include <iomanip>
-Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string file_path,  int lcc, int scc, int bcc, int jcc, int acc, int dcc){
+Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string file_path,  int lcc, int scc, int bcc, int jcc, int acc, int dcc, int inst_addr){
         
         inst_mem.open(file_path, ios::in);
         if(!inst_mem.is_open()){
                 cerr << "Failed: Cannot open file " << file_path << "\n";
                 exit(1); 
         }
+        inst_addrs = inst_addr;
         done = false;
         can_issue = true;
         branch_met = false;
@@ -92,17 +93,10 @@ Tomasulu::Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string 
                 register_status.push_back(r);
         }
 
-        for (int o = 0; o < MEM_SIZE; o++)
-        {
-                DataMem[o] = o;
+        for (int o = 0; o < MEM_SIZE; o++){
+                DataMem[o] = 0;
         }
         
-        DataMem [0] = 17;
-        DataMem [110] = 9;
-        DataMem [1] = 25;
-        DataMem [124] = 9;
-        DataMem [300] = 7;
-
 }
 void Tomasulu::addToMem (int val, int address){
         DataMem [address] = val;
@@ -114,12 +108,14 @@ void Tomasulu::extract_instructions(){
                 Instruction temp_inst(line);
                 instructions.push_back(temp_inst);                 
         }
+        rename_instructions();
         return;
 }
 void Tomasulu::rename_instructions(){
-        printf("\n");
+        
         for (int i=0; i<instructions.size(); i++){
-        instructions[i].extract_type();
+                instructions[i].extract_type();
+        }  
       
         /* Renaming 
         cout << instructions[i].get_rd() <<" <-- " << instructions[i].get_rs1() << " op " << instructions[i].get_rs2() <<" \n"; 
@@ -134,12 +130,7 @@ void Tomasulu::rename_instructions(){
                 
                 cout << instructions[i].get_rd() <<" <-- " << instructions[i].get_rs1() << " op " << instructions[i].get_rs2() <<" \n"; 
         }*/
-        /************/
-        // printf("\n");
-        }  
-  
-
-        
+        /************/     
 }
 
 void Tomasulu::print_instructions (){
@@ -150,9 +141,14 @@ void Tomasulu::print_instructions (){
 
 
 void Tomasulu::simulate(){ 
-
-       while (!done) {
-                cout << clock << " ";
+        cout << "Choose the mode of operation: \n Enter 1 for stepping in\n Enter 2 to the final stats\n";
+        cout << "Choice: ";
+        int mode;
+        cin >> mode;
+        int limit = instructions.size() * 10;
+        
+        while (!done) {
+                if(mode == 1) cout << "\nCycle # " << clock << " .... ";
                 if(inst_to_issue<instructions.size() && can_issue)
                         Issue();
                 
@@ -162,7 +158,7 @@ void Tomasulu::simulate(){
 
                 for (int i=0; i<RS.size(); i++){
                         for (int j=0; j<RS[i].size(); j++){
-                               if (RS[i][j]->busy || clock < 100){
+                               if (RS[i][j]->busy || clock < limit){
                                         done = false;
                                         goto cont;
                                 }
@@ -174,13 +170,24 @@ void Tomasulu::simulate(){
                 cont:
 
                 clock ++;
-              
-                int o; 
-                cin >> o;
-                if (o == -1) break;
-                
-                print_stats();
+                if(mode == 1){
+                        cout << "Enter 0 to cont / -1 to end: ";
+                        int o; 
+                        cin >> o;
+                        if (o == -1) mode = 2;
+                        print_stats();
+                }
         }
+
+        cout << "\n";
+        for (int i=0; i<130; i++){
+                cout << "*";
+        }
+        cout << "\n\t\t\t\tFINAL STATS OF PROGRAM\n";
+        for (int i=0; i<130; i++){
+                cout << "*";
+        }
+        cout << "\n";
         print_stats();
 }
 
@@ -193,7 +200,6 @@ void Tomasulu::Issue(){
                 if(res_counter[instructions[inst_to_issue].get_res_id()] < res_count[instructions[inst_to_issue].get_int_type()]){
                         
                         instructions[inst_to_issue].set_issue_t(clock);
-                        cout << "\t\t\tINSTRUCTION TO ISSUE => " << inst_to_issue << "\n";
                         
                         int res_id = instructions[inst_to_issue].get_res_id();
                         int size_RS = RS[res_id].size();
@@ -283,7 +289,7 @@ void Tomasulu::Execute(){
                         && instructions[inst_num].get_exec_e() <= (cyc_count[instructions[inst_num].get_int_type()])
                         && (!branch_met || (branch_met && (inst_num <= branch_pc)))
                         ){
-                        //     cout << "\n" << inst_num << ": Qj " << RS[i][j]->Qj << " " << "Qk " << RS[i][j]->Qk << " ";
+                        //     if(inst_num > 7) cout << "\n" << inst_num << ": Qj " << RS[i][j]->Qj << " " << "Qk " << RS[i][j]->Qk << " ";
                         //     cout << "\t end: " << instructions[inst_num].get_exec_e() << "\t start: " << instructions[inst_num].get_exec_s()<< "\n";
                             if (RS[i][j]->Qj == -1 && RS[i][j]->Qk == -1){          //Qj and Qk are empty
                                     
@@ -300,6 +306,9 @@ void Tomasulu::Execute(){
                                             int s = instructions[inst_num].get_exec_s();
                                             int e = instructions[inst_num].get_exec_e();
                                             instructions[inst_num].set_exec_e(s+e);
+                                            if(inst_num == 0) {
+                                                instructions[inst_num].set_exec_e(instructions[inst_num].get_exec_s()+cyc_count[instructions[inst_num].get_int_type()]-1);
+                                             }
                                             int int_type = instructions[inst_num].get_int_type();
                                             switch (int_type)
                                             {
@@ -317,9 +326,13 @@ void Tomasulu::Execute(){
                                             case 2:
                                                     /* BEQ rs1, rs2, imm */
                                                     if (RS[i][j]->Vj == RS[i][j]->Vk){
-                                                        inst_to_issue += RS[i][j]->imm;
-                                                        for (int k = 0; k < RS_flush.size(); k++)
+                                                        inst_to_issue = (branch_pc + RS[i][j]->imm);
+                                                        for (int k = 0; k < RS_flush.size(); k++){
+                                                                res_counter[instructions[RS_flush[k]->instruction_number].get_res_id()]--;
+                                                                register_status[instructions[RS_flush[k]->instruction_number].get_rd()].setQ(-1, -1);
+                                                                register_status[instructions[RS_flush[k]->instruction_number].get_rd()].setNOTBusy();
                                                                 RS_flush[k]->resetRS();
+                                                        }
                                                         misprediction_count++;
                                                     }
                                                     branch_met = false;
@@ -331,7 +344,7 @@ void Tomasulu::Execute(){
                                                     /* JALR rs1 */
                                                     RS[i][j]->result = inst_to_issue;
                                                     RS[i][j]->ready = true;
-                                                    inst_to_issue = RS[i][j]->Vj;
+                                                    inst_to_issue = RS[i][j]->Vj - inst_addrs;
                                                     can_issue = true;
                                                     break;
                                             case 4:
@@ -372,6 +385,7 @@ void Tomasulu::Execute(){
                             } else continue;
                    }
             }
+              
     }
 }
 
@@ -416,10 +430,12 @@ void Tomasulu::WriteBack(){
                                                                 if (RS[x][y]->IDj == i && RS[x][y]->Qj == j){
                                                                         RS[x][y]->Vj = RS[i][j]->result;
                                                                         RS[x][y]->Qj = -1;
+                                                                        execute_rs(x, y);
                                                                 }
                                                                 if (RS[x][y]->IDk == i && RS[x][y]->Qk == j){
                                                                         RS[x][y]->Vk = RS[i][j]->result;
                                                                         RS[x][y]->Qk = -1;
+                                                                        execute_rs(x, y);
                                                                 }
                                                         }
                                                     }
@@ -455,6 +471,109 @@ void Tomasulu::WriteBack(){
         }
 }
 
+void Tomasulu::execute_rs(int i, int j){
+       
+        int inst_num = RS[i][j]->instruction_number;
+
+                        // cout << inst_num << " ";
+                        // cout << "\t" << instructions[inst_num].get_issue_t() << " " << clock << "\n";
+
+        if (RS[i][j]->busy 
+            && instructions[inst_num].get_issue_t() < clock 
+            && instructions[inst_num].get_exec_e() <= (cyc_count[instructions[inst_num].get_int_type()])
+            && (!branch_met || (branch_met && (inst_num <= branch_pc)))
+            ){
+                            if (RS[i][j]->Qj == -1 && RS[i][j]->Qk == -1){          //Qj and Qk are empty
+                                    
+                                    if (instructions[inst_num].get_exec_s() == 0){
+                                            instructions[inst_num].set_exec_s(clock);
+                                            int e = instructions[inst_num].get_exec_e();
+                                            instructions[inst_num].set_exec_e(++e);
+                                    } else {
+                                            int e = instructions[inst_num].get_exec_e();
+                                            instructions[inst_num].set_exec_e(++e);
+                                    }
+                                    
+                                    if (instructions[inst_num].get_exec_e() >= (cyc_count[instructions[inst_num].get_int_type()])-1){
+                                            int s = instructions[inst_num].get_exec_s();
+                                            int e = instructions[inst_num].get_exec_e();
+                                            instructions[inst_num].set_exec_e(s+e);
+                                            int int_type = instructions[inst_num].get_int_type();
+                                            switch (int_type)
+                                            {
+                                            case 0:
+                                                    /* LW rd, imm(rs1) */
+                                                    RS[i][j]->address = RS[i][j]->Vj + RS[i][j]->imm;
+                                                    RS[i][j]->result = DataMem[RS[i][j]->address % MEM_SIZE];
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 1:
+                                                    /* SW rs2, imm(rs1) */
+                                                    RS[i][j]->address = RS[i][j]->Vj + RS[i][j]->imm;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 2:
+                                                    /* BEQ rs1, rs2, imm */
+                                                    if (RS[i][j]->Vj == RS[i][j]->Vk){
+                                                        inst_to_issue = (branch_pc + RS[i][j]->imm);
+                                                        for (int k = 0; k < RS_flush.size(); k++){
+                                                                res_counter[instructions[RS_flush[k]->instruction_number].get_res_id()]--;
+                                                                register_status[instructions[RS_flush[k]->instruction_number].get_rd()].setQ(-1, -1);
+                                                                register_status[instructions[RS_flush[k]->instruction_number].get_rd()].setNOTBusy();
+                                                                RS_flush[k]->resetRS();
+                                                        }
+                                                        misprediction_count++;
+                                                    }
+                                                    branch_met = false;
+                                                    RS_flush.clear();
+                                                    no_of_branches++;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 3:
+                                                    /* JALR rs1 */
+                                                    RS[i][j]->result = inst_to_issue;
+                                                    RS[i][j]->ready = true;
+                                                    inst_to_issue = RS[i][j]->Vj - inst_addrs;
+                                                    can_issue = true;
+                                                    break;
+                                            case 4:
+                                                    /* RET */
+                                                    inst_to_issue = RS[i][j]->Vj;
+                                                    can_issue = true;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 5:
+                                                    /* ADD rd, rs1, rs2  */ 
+                                                    RS[i][j]->result = RS[i][j]->Vj + RS[i][j]->Vk;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 6:
+                                                    /* NEG rd, rs1 */
+                                                    RS[i][j]->result = 0-RS[i][j]->Vj;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 7:
+                                                    /* ADDI rd, rs1, imm */
+                                                    RS[i][j]->result = RS[i][j]->Vj + RS[i][j]->imm;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            case 8:
+                                                    /* DIV rd, rs1, rs2 */
+                                                    RS[i][j]->result = RS[i][j]->Vj / RS[i][j]->Vk;
+                                                    RS[i][j]->ready = true;
+                                                    break;
+                                            default:
+                                                    RS[i][j]->ready = false;
+                                                    cout << "DEFAULT EXEC\n";
+                                                    break;
+                                        }
+
+                                    }       
+                            }
+            }
+
+}
+
 void Tomasulu::print_stats(){
         // ofstream stats;
         // stats.open("stats.html", ios::out);
@@ -468,18 +587,31 @@ void Tomasulu::print_stats(){
                         << "\t" << instructions[i].get_exec_s() <<" - " << instructions[i].get_exec_e() 
                         << "\t\t" <<instructions[i].get_write_t() << endl;
         }
+        
+        for (int i=0; i<130; i++){
+                cout << "_";
+        }
         cout << "\nREG Status\n";
         for(int j=0; j<REG_FILE_SIZE; j++){
                 cout <<"X" <<j <<": " << register_status[j].getIndex() << " " << register_status[j].getQ() << "\t";
         }
-
-        cout << "\nREG file\n";
+        cout << "\n";
+        for (int i=0; i<130; i++){
+                cout << "_";
+        }       
+        cout << "\n\nREG file\n";
         for(int j=0; j<REG_FILE_SIZE; j++){
-                cout <<"X" <<j <<": " <<reg_file[j] << "\t";
+                cout <<"X" <<j <<": " << reg_file[j] << "\t\t";
         }
-        printf("\n");
+        cout << "\n";
+        for (int i=0; i<130; i++){
+                cout << "_";
+        }    
+
+        printf("\n\n");
         cout << "Number of Clock cycles = " << instructions[i-1].get_write_t() << "\n";
         cout << "Instruction per Cycle (IPC) = " << (float)i / (float)instructions[i-1].get_write_t() << "\n";
         cout << "Branch Misprediction Percentage = " << ((float)misprediction_count / (float)no_of_branches) * 100 << "\n";
         
 }
+

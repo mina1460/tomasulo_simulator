@@ -1,0 +1,17 @@
+LW x2, 4(x0)
+LW x3, 5(x0)
+ADDI x7, x0, 9
+ADDI x4, x0, 2
+ADDI x5, x0, 1024
+ADDI x7, x7, -1
+BEQ x7, x0, 5
+ADD x2, x2, x2
+NEG x3, x3
+DIV x5, x5, x4
+BEQ x0, x0, -5
+SW x2, 10(x0)
+SW x3, 11(x0)
+SW x5, 12(x0)
+
+// data [4] = 2
+// data [5] = 9

@@ -44,3 +44,20 @@ ADDI x2, x0, 16
 ADDI x1, x0, 2
 DIV x3, x2, x1
 NEG x4, x3
+
+ADD x5, x0, x0
+ADDI x3, x0, 5
+ADD x2, x5, x3
+DIV x5, x2, x3
+JALR x5
+NEG x4, x5
+
+ADDI x4, x0, 9
+ADDI x2, x4, 20
+JALR x4
+ADDI x2, x2, 5
+ADD x0, x0, x4
+ADD x0, x0, x2
+ADDI x6, x0, 6
+ADDI x7, x0, 4
+

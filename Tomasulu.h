@@ -21,7 +21,7 @@ class Tomasulu{
         bool branch_met;
         bool can_issue;
 
-        int DataMem [MEM_SIZE] = {0};
+        int DataMem [MEM_SIZE];
         vector <int> res_count;             //reservation stations count
         vector <int> cyc_count;             //cycles taken to execute instruction
         vector <int> res_counter;           //currently used reservation stations
@@ -31,7 +31,8 @@ class Tomasulu{
 
         int reg_file [REG_FILE_SIZE];           //values of the registers
         int reg_map  [REG_FILE_SIZE];           //mapping of renamed registers
-        int reg_free_counter;       
+        int reg_free_counter;   
+        int inst_addrs;    
         vector <ReservationStation*> reg_functionalUnit_Map;    //register mapping to reservation station
         ifstream inst_mem;  
         vector <Rstat> register_status;
@@ -40,7 +41,7 @@ class Tomasulu{
         
 
     public: 
-        Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string file_path,  int lcc, int scc, int bcc, int jcc, int acc, int dcc);
+        Tomasulu(int lrc, int src, int brc, int jrc, int arc, int drc, string file_path,  int lcc, int scc, int bcc, int jcc, int acc, int dcc, int inst_addr);
         void addToMem (int val, int address);
         void extract_instructions();
         void rename_instructions();
@@ -49,6 +50,7 @@ class Tomasulu{
         void Issue ();
         void Execute ();
         void WriteBack ();
+        void execute_rs (int x, int y);
         void print_stats();
 };
 

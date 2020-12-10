@@ -23,12 +23,12 @@ class ReservationStation {
         void resetRS();
 
         string name;
-        int IDj, IDk;
         bool busy;
         string op;
         int Vj, Vk;
-        int imm;
         int Qj, Qk;
+        int IDj, IDk;
+        int imm;
         int address;
         int instruction_number; 
         bool ready; 
